@@ -685,13 +685,13 @@ class Generator {
     }
 
     // Print barcode
-    final header = cBarcodePrint.codeUnits + [barcode.type!.value];
-    if (barcode.type!.value <= 6) {
+    final header = cBarcodePrint.codeUnits + [barcode.type.value];
+    if (barcode.type.value <= 6) {
       // Function A
-      bytes += header + barcode.data! + [0];
+      bytes += header + barcode.data + [0];
     } else {
       // Function B
-      bytes += header + [barcode.data!.length] + barcode.data!;
+      bytes += header + [barcode.data.length] + barcode.data;
     }
     return bytes;
   }
