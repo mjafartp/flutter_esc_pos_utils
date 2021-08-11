@@ -69,7 +69,6 @@
       "model": "Default",
       "description": "Default ESC/POS profile"
     },
-
     "XP-N160I": {
       "codePages": {
         "0": "CP437",
@@ -193,6 +192,53 @@
       "vendor": "Rongta",
       "model": "RP80USE",
       "description": ""
+    },
+    "SUNMI": {
+      "codePages": {
+        "0": "CP437",
+        "1": "BIG5",
+        "2": "CP850",
+        "3": "CP860",
+        "4": "CP863",
+        "5": "CP865",
+        "6": "Unknown",
+        "7": "Unknown",
+        "8": "Unknown",
+        "9": "Unknown",
+        "10": "Unknown",
+        "11": "Unknown",
+        "12": "Unknown",
+        "13": "Unknown",
+        "14": "CP737",
+        "15": "CP928",
+        "16": "Windows-1252",
+        "17": "CP866",
+        "18": "CP852",
+        "19": "CP858",
+        "20": "CP874",
+        "21": "Unknown",
+        "22": "Unknown",
+        "23": "Unknown",
+        "24": "Unknown",
+        "25": "Unknown",
+        "26": "Unknown",
+        "27": "Unknown",
+        "28": "Unknown",
+        "29": "Unknown",
+        "30": "Unknown",
+        "31": "Unknown",
+        "32": "Unknown",
+        "33": "Windows-775",
+        "34": "CP855",
+        "35": "Unknown",
+        "36": "CP862",
+        "37": "CP864",
+        "254": "CP855",
+        "255": "utf-8"
+      },
+      "vendor": "SUNMI",
+      "model": "SUNMI",
+      "description": "inbuilt printers"
     }
   }
 }

@@ -1,3 +1,7 @@
+## 0.0.5
+
+* Fix compile time warnings
+
 ## 0.0.4
 
 * example added
