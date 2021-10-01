@@ -26,7 +26,7 @@
         "23": "Unknown",
         "24": "Unknown",
         "25": "Unknown",
-        "26": "Unknown",
+        "26": "Thai",
         "30": "TCVN-3-1",
         "31": "TCVN-3-2",
         "32": "CP720",
@@ -239,6 +239,31 @@
       "vendor": "SUNMI",
       "model": "SUNMI",
       "description": "inbuilt printers"
+    },
+    "TP806L": {
+      "codePages": {
+        "0": "PC437",
+        "1": "Katakana",
+        "2": "PC850",
+        "3": "PC860",
+        "4": "PC863",
+        "5": "PC865",
+        "13": "PC857",
+        "14": "PC737",
+        "15": "ISO8859-7",
+        "16": "WPC1252",
+        "17": "PC866",
+        "18": "PC852",
+        "19": "PC858",
+        "20": "KU42",
+        "32": "PC720",
+        "37": "PC864",
+        "50": "WPC1256",
+        "63": "ISO-8859-6"
+      },
+      "vendor": "HPRT",
+      "model": "TP806L",
+      "description": ""
     }
   }
 }

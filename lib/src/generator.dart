@@ -8,7 +8,8 @@ import 'enums.dart';
 import 'commands.dart';
 
 class Generator {
-  Generator(this._paperSize, this._profile, {this.spaceBetweenRows = 5});
+  Generator(this._paperSize, this._profile,
+      {this.spaceBetweenRows = 5, this.codec = latin1});
 
   // Ticket config
   final PaperSize _paperSize;
@@ -19,6 +20,7 @@ class Generator {
   PosFontType? _font;
   // Current styles
   PosStyles _styles = PosStyles();
+  final Codec codec;
   int spaceBetweenRows;
 
   // ************************ Internal helpers ************************
@@ -66,7 +68,7 @@ class Generator {
         .replaceAll(" ", ' ')
         .replaceAll("•", '.');
     if (!isKanji) {
-      return latin1.encode(text);
+      return codec.encode(text);
     } else {
       return Uint8List.fromList(gbk_bytes.encode(text));
     }
@@ -252,7 +254,7 @@ class Generator {
   List<int> setStyles(PosStyles styles, {bool isKanji = false}) {
     List<int> bytes = [];
     if (styles.align != _styles.align) {
-      bytes += latin1.encode(styles.align == PosAlign.left
+      bytes += codec.encode(styles.align == PosAlign.left
           ? cAlignLeft
           : (styles.align == PosAlign.center ? cAlignCenter : cAlignRight));
       _styles = _styles.copyWith(align: styles.align);
@@ -594,7 +596,9 @@ class Generator {
     // Adjust line spacing (for 16-unit line feeds): ESC 3 0x10 (HEX: 0x1b 0x33 0x10)
     bytes += [27, 51, 16];
     for (int i = 0; i < blobs.length; ++i) {
-      bytes += List.from(header)..addAll(blobs[i])..addAll('\n'.codeUnits);
+      bytes += List.from(header)
+        ..addAll(blobs[i])
+        ..addAll('\n'.codeUnits);
     }
     // Reset line spacing: ESC 2 (HEX: 0x1b 0x32)
     bytes += [27, 50];

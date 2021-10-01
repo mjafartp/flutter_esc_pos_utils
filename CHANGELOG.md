@@ -1,3 +1,9 @@
+## 0.1.0
+
+* Fix barcode printing in some printers
+* Added more printer code tables
+* Added non-latin characters support
+
 ## 0.0.5
 
 * Fix compile time warnings
