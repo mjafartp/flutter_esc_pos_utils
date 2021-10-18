@@ -1,3 +1,7 @@
+## 0.1.1
+
+* Added clearStyle function
+
 ## 0.1.0
 
 * Fix barcode printing in some printers
