@@ -226,7 +226,8 @@ class Generator {
 
   /// Clear the buffer and reset text styles
   List<int> clearStyle() {
-    return setStyles(const PosStyles());
+    return setStyles(
+        const PosStyles(height: PosTextSize.size1, width: PosTextSize.size1));
   }
 
   /// Set global code table which will be used instead of the default printer's code table
