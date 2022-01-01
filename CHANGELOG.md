@@ -1,3 +1,8 @@
+## 0.1.4
+
+* Fix change row issue
+* Fix CJK(Chinese, Japanese and Korean) String overlap when using Generator.row() method
+
 ## 0.1.3
 
 * Added clearStyle function
