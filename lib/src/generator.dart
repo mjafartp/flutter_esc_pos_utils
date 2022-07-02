@@ -26,6 +26,8 @@ class Generator {
   int _getMaxCharsPerLine(PosFontType? font) {
     if (_paperSize == PaperSize.mm58) {
       return (font == null || font == PosFontType.fontA) ? 32 : 42;
+    } else if (_paperSize == PaperSize.mm72) {
+      return (font == null || font == PosFontType.fontA) ? 42 : 56;
     } else {
       return (font == null || font == PosFontType.fontA) ? 48 : 64;
     }
@@ -137,7 +139,8 @@ class Generator {
     final int heightPx = image.height;
 
     // Create a black bottom layer
-    final biggerImage = copyResize(image, width: widthPx, height: heightPx);
+    final biggerImage = copyResize(image,
+        width: widthPx, height: heightPx, interpolation: Interpolation.linear);
     fill(biggerImage, 0);
     // Insert source image into bigger one
     drawImage(biggerImage, image, dstX: 0, dstY: 0);
@@ -567,20 +570,34 @@ class Generator {
   /// Print an image using (ESC *) command
   ///
   /// [image] is an instance of class from [Image library](https://pub.dev/packages/image)
-  List<int> image(Image imgSrc, {PosAlign align = PosAlign.center}) {
+  List<int> image(Image imgSrc,
+      {PosAlign align = PosAlign.center, bool isDoubleDensity = true}) {
     List<int> bytes = [];
     // Image alignment
     bytes += setStyles(PosStyles().copyWith(align: align));
 
-    final Image image = Image.from(imgSrc); // make a copy
-    const bool highDensityHorizontal = true;
-    const bool highDensityVertical = true;
+    Image image;
+    if (!isDoubleDensity) {
+      int size = 558 ~/ 2;
+      if (_paperSize == PaperSize.mm58) {
+        size = 375 ~/ 2;
+      } else if (_paperSize == PaperSize.mm72) {
+        size = 503 ~/ 2;
+      }
+
+      image =
+          copyResize(imgSrc, width: size, interpolation: Interpolation.linear);
+    } else {
+      image = Image.from(imgSrc); // make a copy
+    }
+    bool highDensityHorizontal = isDoubleDensity;
+    bool highDensityVertical = isDoubleDensity;
 
     invert(image);
     flip(image, Flip.horizontal);
     final Image imageRotated = copyRotate(image, 270);
 
-    const int lineHeight = highDensityVertical ? 3 : 1;
+    int lineHeight = highDensityVertical ? 3 : 1;
     final List<List<int>> blobs = _toColumnFormat(imageRotated, lineHeight * 8);
 
     // Compress according to line density
@@ -592,7 +609,7 @@ class Generator {
     }
 
     final int heightPx = imageRotated.height;
-    const int densityByte =
+    int densityByte =
         (highDensityHorizontal ? 1 : 0) + (highDensityVertical ? 32 : 0);
 
     final List<int> header = List.from(cBitImg.codeUnits);
@@ -718,6 +735,17 @@ class Generator {
     bytes += setStyles(PosStyles().copyWith(align: align));
     QRCode qr = QRCode(text, size, cor);
     bytes += qr.bytes;
+    return bytes;
+  }
+
+  //0 - 17
+  //or 48 - 59
+  //TM-T82II  m = 0 – 11, 48 – 59
+  List<int> printSpeech(int level) {
+    List<int> bytes = [];
+    // FN 167. QR Code: Set the size of module
+    // pL pH fn m
+    bytes += cControlHeader.codeUnits + [0x02, 0x00, 0x32, level];
     return bytes;
   }
 

@@ -63,7 +63,7 @@
         "75": "Unknown",
         "82": "Unknown",
         "254": "Unknown",
-        "255": "Unknown"
+        "255": "utf8"
       },
       "vendor": "Generic",
       "model": "Default",
@@ -234,7 +234,7 @@
         "36": "CP862",
         "37": "CP864",
         "254": "CP855",
-        "255": "utf-8"
+        "255": "utf8"
       },
       "vendor": "SUNMI",
       "model": "SUNMI",
