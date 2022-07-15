@@ -1,3 +1,12 @@
+## 0.1.7
+
+* Minor bug fixes
+
+## 0.1.6
+
+* Added 72mm Paper Size 
+* Added Single density image print
+
 ## 0.1.4
 
 * Fix change row issue

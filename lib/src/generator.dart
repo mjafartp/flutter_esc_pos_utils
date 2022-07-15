@@ -333,7 +333,7 @@ class Generator {
     return bytes;
   }
 
-  /// Sens raw command(s)
+  /// Send raw command(s)
   List<int> rawBytes(List<int> cmd, {bool isKanji = false}) {
     List<int> bytes = [];
     if (!isKanji) {
@@ -461,7 +461,7 @@ class Generator {
   ///
   /// A row contains up to 12 columns. A column has a width between 1 and 12.
   /// Total width of columns in one row must be equal 12.
-  List<int> row(List<PosColumn> cols,{bool multiLine=true}) {
+  List<int> row(List<PosColumn> cols, {bool multiLine = true}) {
     List<int> bytes = [];
     final isSumValid = cols.fold(0, (int sum, col) => sum + col.width) == 12;
     if (!isSumValid) {
@@ -486,12 +486,12 @@ class Generator {
             : _encode(cols[i].text);
 
         // If the col's content is too long, split it to the next row
-        if(multiLine) {
+        if (multiLine) {
           int realCharactersNb = encodedToPrint.length;
           if (realCharactersNb > maxCharactersNb) {
             // Print max possible and split to the next row
             Uint8List encodedToPrintNextRow =
-            encodedToPrint.sublist(maxCharactersNb);
+                encodedToPrint.sublist(maxCharactersNb);
             encodedToPrint = encodedToPrint.sublist(0, maxCharactersNb);
             isNextRow = true;
             nextRow.add(PosColumn(
