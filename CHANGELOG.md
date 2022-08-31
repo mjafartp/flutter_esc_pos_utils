@@ -1,3 +1,7 @@
+## 0.1.8
+
+* Minor bug fixes
+
 ## 0.1.7
 
 * Minor bug fixes
