@@ -141,16 +141,16 @@ class Generator {
     // Create a black bottom layer
     final biggerImage = copyResize(image,
         width: widthPx, height: heightPx, interpolation: Interpolation.linear);
-    fill(biggerImage, 0);
+    fill(biggerImage, color: ColorUint1(0));
     // Insert source image into bigger one
-    drawImage(biggerImage, image, dstX: 0, dstY: 0);
+    compositeImage(biggerImage, image, dstX: 0, dstY: 0);
 
     int left = 0;
     final List<List<int>> blobs = [];
 
     while (left < widthPx) {
-      final Image slice = copyCrop(biggerImage, left, 0, lineHeight, heightPx);
-      final Uint8List bytes = slice.getBytes(format: Format.luminance);
+      final Image slice = copyCrop(biggerImage, x:left, y:0, width:lineHeight, height:heightPx);
+      final Uint8List bytes = slice.getBytes(order: ChannelOrder.rgba);
       blobs.add(bytes);
       left += lineHeight;
     }
@@ -169,7 +169,7 @@ class Generator {
 
     // R/G/B channels are same -> keep only one channel
     final List<int> oneChannelBytes = [];
-    final List<int> buffer = image.getBytes(format: Format.rgba);
+    final List<int> buffer = image.getBytes(order: ChannelOrder.rgba);
     for (int i = 0; i < buffer.length; i += 4) {
       oneChannelBytes.add(buffer[i]);
     }
@@ -596,8 +596,8 @@ class Generator {
     bool highDensityVertical = isDoubleDensity;
 
     invert(image);
-    flip(image, Flip.horizontal);
-    final Image imageRotated = copyRotate(image, 270);
+    flip(image, direction: FlipDirection.horizontal);
+    final Image imageRotated = copyRotate(image, angle: 270);
 
     int lineHeight = highDensityVertical ? 3 : 1;
     final List<List<int>> blobs = _toColumnFormat(imageRotated, lineHeight * 8);
