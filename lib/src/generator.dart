@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data' show Uint8List;
+//import 'dart:ui';
 import 'package:hex/hex.dart';
 import 'package:image/image.dart';
 import 'package:gbk_codec/gbk_codec.dart';
@@ -141,16 +142,19 @@ class Generator {
     // Create a black bottom layer
     final biggerImage = copyResize(image,
         width: widthPx, height: heightPx, interpolation: Interpolation.linear);
-    fill(biggerImage, 0);
+    //fill(biggerImage, color: ColorRgb8(0, 0, 0));
+    fill(biggerImage, color: ColorRgb8(0,0,0));
     // Insert source image into bigger one
-    drawImage(biggerImage, image, dstX: 0, dstY: 0);
+    compositeImage(biggerImage, image, dstX: 0, dstY: 0);
 
     int left = 0;
     final List<List<int>> blobs = [];
 
     while (left < widthPx) {
-      final Image slice = copyCrop(biggerImage, left, 0, lineHeight, heightPx);
-      final Uint8List bytes = slice.getBytes(format: Format.luminance);
+      final Image slice = copyCrop(biggerImage, x: left, y: 0, width: lineHeight, height: heightPx);
+      if (slice.numChannels>2) grayscale(slice);
+      final imgBinary = (slice.numChannels>1) ? slice.convert(numChannels: 1) : slice;
+      final bytes = imgBinary.getBytes();
       blobs.add(bytes);
       left += lineHeight;
     }
@@ -169,7 +173,7 @@ class Generator {
 
     // R/G/B channels are same -> keep only one channel
     final List<int> oneChannelBytes = [];
-    final List<int> buffer = image.getBytes(format: Format.rgba);
+    final List<int> buffer = image.getBytes(order: ChannelOrder.rgba);
     for (int i = 0; i < buffer.length; i += 4) {
       oneChannelBytes.add(buffer[i]);
     }
@@ -592,12 +596,13 @@ class Generator {
     } else {
       image = Image.from(imgSrc); // make a copy
     }
+
     bool highDensityHorizontal = isDoubleDensity;
     bool highDensityVertical = isDoubleDensity;
 
     invert(image);
-    flip(image, Flip.horizontal);
-    final Image imageRotated = copyRotate(image, 270);
+    flipHorizontal(image);
+    final Image imageRotated = copyRotate(image, angle: 270);
 
     int lineHeight = highDensityVertical ? 3 : 1;
     final List<List<int>> blobs = _toColumnFormat(imageRotated, lineHeight * 8);
