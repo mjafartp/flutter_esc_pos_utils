@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:typed_data' show Uint8List;
-//import 'dart:ui';
 import 'package:hex/hex.dart';
 import 'package:image/image.dart';
 import 'package:gbk_codec/gbk_codec.dart';
@@ -143,7 +142,7 @@ class Generator {
     final biggerImage = copyResize(image,
         width: widthPx, height: heightPx, interpolation: Interpolation.linear);
     //fill(biggerImage, color: ColorRgb8(0, 0, 0));
-    fill(biggerImage, color: ColorRgb8(0,0,0));
+    fill(biggerImage, color: ColorRgb8(0, 0, 0));
     // Insert source image into bigger one
     compositeImage(biggerImage, image, dstX: 0, dstY: 0);
 
@@ -151,9 +150,11 @@ class Generator {
     final List<List<int>> blobs = [];
 
     while (left < widthPx) {
-      final Image slice = copyCrop(biggerImage, x: left, y: 0, width: lineHeight, height: heightPx);
-      if (slice.numChannels>2) grayscale(slice);
-      final imgBinary = (slice.numChannels>1) ? slice.convert(numChannels: 1) : slice;
+      final Image slice = copyCrop(biggerImage,
+          x: left, y: 0, width: lineHeight, height: heightPx);
+      if (slice.numChannels > 2) grayscale(slice);
+      final imgBinary =
+          (slice.numChannels > 1) ? slice.convert(numChannels: 1) : slice;
       final bytes = imgBinary.getBytes();
       blobs.add(bytes);
       left += lineHeight;
