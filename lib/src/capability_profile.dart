@@ -35,10 +35,6 @@ class CapabilityProfile {
   List<CodePage> codePages;
 
   int getCodePageId(String? codePage) {
-    if (codePages == null) {
-      throw Exception("The CapabilityProfile isn't initialized");
-    }
-
     return codePages
         .firstWhere((cp) => cp.name == codePage,
             orElse: () => throw Exception(
