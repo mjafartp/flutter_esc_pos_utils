@@ -1,3 +1,7 @@
+## 1.0.0
+
+* image package update
+
 ## 0.1.8
 
 * Minor bug fixes
