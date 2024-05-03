@@ -188,12 +188,11 @@ class Generator {
       oneChannelBytes = List<int>.filled(heightPx * targetWidth, 0);
 
       for (int i = 0; i < heightPx; i++) {
-         final pos =
+        final pos =
             (i * widthPx) + i * missingPx; // Corrected position calculation
         oneChannelBytes.insertAll(pos, extra);
       }
     }
-
 
     //  if (widthPx % 8 != 0) {
     //   final targetWidth = (widthPx + 8) - (widthPx % 8);
@@ -204,7 +203,6 @@ class Generator {
     //     oneChannelBytes.insertAll(pos, extra);
     //   }
     // }
-
 
     // Pack bits into bytes
     return _packBitsIntoBytes(oneChannelBytes);
