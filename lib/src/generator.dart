@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'dart:typed_data' show Uint8List;
+
+import 'package:flutter_esc_pos_utils/flutter_esc_pos_utils.dart';
+import 'package:gbk_codec/gbk_codec.dart';
 import 'package:hex/hex.dart';
 import 'package:image/image.dart';
-import 'package:gbk_codec/gbk_codec.dart';
-import 'package:flutter_esc_pos_utils/flutter_esc_pos_utils.dart';
+
 import 'commands.dart';
 
 class Generator {
@@ -80,19 +82,22 @@ class Generator {
     final List<bool> isLexemeChinese = [];
     int start = 0;
     int end = 0;
-    bool curLexemeChinese = _isChinese(text[0]);
-    for (var i = 1; i < text.length; ++i) {
-      if (curLexemeChinese == _isChinese(text[i])) {
-        end += 1;
-      } else {
-        lexemes.add(text.substring(start, end + 1));
-        isLexemeChinese.add(curLexemeChinese);
-        start = i;
-        end = i;
-        curLexemeChinese = !curLexemeChinese;
+    bool curLexemeChinese = _isChinese(text.isNotEmpty ? text[0] : ' ');
+    if (text.isNotEmpty) {
+      for (var i = 1; i < text.length; ++i) {
+        if (curLexemeChinese == _isChinese(text[i])) {
+          end += 1;
+        } else {
+          lexemes.add(text.substring(start, end + 1));
+          isLexemeChinese.add(curLexemeChinese);
+          start = i;
+          end = i;
+          curLexemeChinese = !curLexemeChinese;
+        }
       }
+
+      lexemes.add(text.substring(start, end + 1));
     }
-    lexemes.add(text.substring(start, end + 1));
     isLexemeChinese.add(curLexemeChinese);
 
     return <dynamic>[lexemes, isLexemeChinese];
