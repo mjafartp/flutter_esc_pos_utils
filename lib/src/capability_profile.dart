@@ -3,8 +3,8 @@ import 'package:flutter/services.dart' show rootBundle;
 
 class CodePage {
   CodePage(this.id, this.name);
-  int id;
-  String name;
+  final int id;
+  final String name;
 }
 
 class CapabilityProfile {
@@ -12,9 +12,27 @@ class CapabilityProfile {
 
   /// Public factory
   static Future<CapabilityProfile> load({String name = 'default'}) async {
-    final content = await rootBundle.loadString(
-        'packages/flutter_esc_pos_utils/resources/capabilities.json');
-    Map capabilities = json.decode(content);
+    final String content;
+    try {
+      content = await rootBundle.loadString(
+          'packages/flutter_esc_pos_utils/resources/capabilities.json');
+    } catch (e) {
+      throw Exception(
+          'Failed to load capabilities.json. '
+          'Ensure the asset is declared in pubspec.yaml: $e');
+    }
+
+    final Map capabilities;
+    try {
+      capabilities = json.decode(content);
+    } catch (e) {
+      throw Exception('Failed to parse capabilities.json: invalid JSON ($e)');
+    }
+
+    if (capabilities['profiles'] == null) {
+      throw Exception(
+          'capabilities.json is missing the "profiles" key');
+    }
 
     var profile = capabilities['profiles'][name];
 
@@ -31,8 +49,8 @@ class CapabilityProfile {
     return CapabilityProfile._internal(name, list);
   }
 
-  String name;
-  List<CodePage> codePages;
+  final String name;
+  final List<CodePage> codePages;
 
   int getCodePageId(String? codePage) {
     return codePages
@@ -43,11 +61,27 @@ class CapabilityProfile {
   }
 
   static Future<List<dynamic>> getAvailableProfiles() async {
-    final content = await rootBundle.loadString(
-        'packages/flutter_esc_pos_utils/resources/capabilities.json');
-    Map capabilities = json.decode(content);
+    final String content;
+    try {
+      content = await rootBundle.loadString(
+          'packages/flutter_esc_pos_utils/resources/capabilities.json');
+    } catch (e) {
+      throw Exception(
+          'Failed to load capabilities.json. '
+          'Ensure the asset is declared in pubspec.yaml: $e');
+    }
+
+    final Map capabilities;
+    try {
+      capabilities = json.decode(content);
+    } catch (e) {
+      throw Exception('Failed to parse capabilities.json: invalid JSON ($e)');
+    }
 
     var profiles = capabilities['profiles'];
+    if (profiles == null) {
+      return [];
+    }
 
     List<dynamic> res = [];
 

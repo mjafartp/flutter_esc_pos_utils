@@ -21,9 +21,9 @@ class PosColumn {
     }
   }
 
-  String text;
-  Uint8List? textEncoded;
-  bool containsChinese;
-  int width;
-  PosStyles styles;
+  final String text;
+  final Uint8List? textEncoded;
+  final bool containsChinese;
+  final int width;
+  final PosStyles styles;
 }

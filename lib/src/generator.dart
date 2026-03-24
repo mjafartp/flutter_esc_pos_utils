@@ -177,37 +177,25 @@ class Generator {
     grayscale(image);
     invert(image);
 
-    // R/G/B channels are same -> keep only one channel
-
-    List<int> oneChannelBytes = [];
+    // R/G/B channels are same -> keep only one channel (R from RGBA)
     final List<int> buffer = image.getBytes(order: ChannelOrder.rgba);
+    List<int> oneChannelBytes = [];
     for (int i = 0; i < buffer.length; i += 4) {
       oneChannelBytes.add(buffer[i]);
-      final targetWidth = (widthPx + 8) - (widthPx % 8);
-      final missingPx = targetWidth - widthPx;
-      final extra = Uint8List(missingPx);
-
-      oneChannelBytes = List<int>.filled(heightPx * targetWidth, 0);
-
-      for (int i = 0; i < heightPx; i++) {
-
-        final pos =
-            (i * widthPx) + i * missingPx; // Corrected position calculation
-        oneChannelBytes.insertAll(pos, extra);
-      }
     }
 
-    // Add some empty pixels at the end of each line (to make the width divisible by 8)
-    // if (widthPx % 8 != 0) {
-
-    //   final targetWidth = (widthPx + 8) - (widthPx % 8);
-    //   final missingPx = targetWidth - widthPx;
-    //   final extra = Uint8List(missingPx);
-    //   for (int i = 0; i < heightPx; i++) {
-    //     final pos = (i * widthPx + widthPx) + i * missingPx;
-    //     oneChannelBytes.insertAll(pos, extra);
-    //   }
-    // }
+    // Add padding pixels at the end of each line to make width divisible by 8
+    if (widthPx % 8 != 0) {
+      final int targetWidth = (widthPx + 7) & ~7; // Round up to multiple of 8
+      final int missingPx = targetWidth - widthPx;
+      final List<int> paddedBytes = [];
+      for (int row = 0; row < heightPx; row++) {
+        final int rowStart = row * widthPx;
+        paddedBytes.addAll(oneChannelBytes.sublist(rowStart, rowStart + widthPx));
+        paddedBytes.addAll(List<int>.filled(missingPx, 0));
+      }
+      oneChannelBytes = paddedBytes;
+    }
 
     // Pack bits into bytes
     return _packBitsIntoBytes(oneChannelBytes);
@@ -468,7 +456,9 @@ class Generator {
       List.from(cBeep.codeUnits)..addAll([beepCount, duration.value]),
     );
 
-    beep(n: n - 9, duration: duration);
+    if (n > 9) {
+      bytes += beep(n: n - 9, duration: duration);
+    }
     return bytes;
   }
 
