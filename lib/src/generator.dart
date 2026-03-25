@@ -7,6 +7,7 @@ import 'package:hex/hex.dart';
 import 'package:image/image.dart';
 
 import 'commands.dart';
+import 'pdf417.dart';
 
 class Generator {
   Generator(this._paperSize, this._profile,
@@ -236,6 +237,25 @@ class Generator {
     bytes += setGlobalCodeTable(_codeTable);
     bytes += setGlobalFont(_font);
     return bytes;
+  }
+
+  /// Set line spacing to [n] dots (0-255)
+  ///
+  /// Uses ESC 3 command. Default line spacing is approximately 4.23mm (1/6 inch).
+  List<int> setLineSpacing(int n) {
+    if (n < 0 || n > 255) {
+      throw Exception('Line spacing must be between 0 and 255');
+    }
+    return Uint8List.fromList(
+      List.from(cLineSpacing.codeUnits)..add(n),
+    );
+  }
+
+  /// Reset line spacing to default (~4.23mm / 1/6 inch)
+  ///
+  /// Uses ESC 2 command.
+  List<int> resetLineSpacing() {
+    return cLineSpacingDefault.codeUnits;
   }
 
   /// Clear the buffer and reset text styles
@@ -741,17 +761,57 @@ class Generator {
   }
 
   /// Print a QR Code
+  /// Print a QR Code
+  ///
+  /// [model] selects QR model: Model 1, Model 2 (default), or Micro QR
+  /// [size] sets module size (1-16 dots per module)
   List<int> qrcode(
     String text, {
     PosAlign align = PosAlign.center,
     QRSize size = QRSize.size4,
     QRCorrection cor = QRCorrection.L,
+    QRModel model = QRModel.model2,
   }) {
     List<int> bytes = [];
     // Set alignment
     bytes += setStyles(const PosStyles().copyWith(align: align));
-    QRCode qr = QRCode(text, size, cor);
+    QRCode qr = QRCode(text, size, cor, model: model);
     bytes += qr.bytes;
+    return bytes;
+  }
+
+  /// Print a PDF417 barcode
+  ///
+  /// [columns] number of data columns (0 = auto, 1-30)
+  /// [rows] number of rows (0 = auto, 3-90)
+  /// [moduleWidth] module width in dots (2-8, default 3)
+  /// [moduleHeight] row height in dots (2-8, default 3)
+  /// [errorCorrection] error correction level (0-8, default 1)
+  /// [truncated] if true, uses truncated PDF417 (Compact PDF417)
+  List<int> pdf417(
+    String text, {
+    PosAlign align = PosAlign.center,
+    int columns = 0,
+    int rows = 0,
+    int moduleWidth = 3,
+    int moduleHeight = 3,
+    int errorCorrection = 1,
+    bool truncated = false,
+  }) {
+    List<int> bytes = [];
+    // Set alignment
+    bytes += setStyles(const PosStyles().copyWith(align: align));
+
+    PDF417 pdf = PDF417(
+      text,
+      columns: columns,
+      rows: rows,
+      moduleWidth: moduleWidth,
+      moduleHeight: moduleHeight,
+      errorCorrection: errorCorrection,
+      truncated: truncated,
+    );
+    bytes += pdf.bytes;
     return bytes;
   }
 

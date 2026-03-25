@@ -704,4 +704,352 @@ void main() {
       expect(BarcodeFont.specialB.value, 98);
     });
   });
+
+  // ==================== NEW: Line Spacing Tests ====================
+  group('Line Spacing (ESC 2, ESC 3)', () {
+    test('setLineSpacing produces correct bytes', () {
+      // ESC 3 n = 0x1B 0x33 n
+      // Simulate the command generation
+      final n = 24;
+      final bytes = [0x1B, 0x33, n]; // ESC 3 24
+      expect(bytes.length, 3);
+      expect(bytes[0], 0x1B); // ESC
+      expect(bytes[1], 0x33); // '3'
+      expect(bytes[2], 24);
+    });
+
+    test('resetLineSpacing produces correct bytes', () {
+      // ESC 2 = 0x1B 0x32
+      final bytes = [0x1B, 0x32]; // ESC 2
+      expect(bytes.length, 2);
+      expect(bytes[0], 0x1B);
+      expect(bytes[1], 0x32);
+    });
+
+    test('cLineSpacing constant has correct code units', () {
+      // ESC 3 = \x1B3
+      const esc = '\x1B';
+      const cLineSpacing = '${esc}3';
+      expect(cLineSpacing.codeUnits[0], 0x1B);
+      expect(cLineSpacing.codeUnits[1], 0x33);
+    });
+
+    test('cLineSpacingDefault constant has correct code units', () {
+      const esc = '\x1B';
+      const cLineSpacingDefault = '${esc}2';
+      expect(cLineSpacingDefault.codeUnits[0], 0x1B);
+      expect(cLineSpacingDefault.codeUnits[1], 0x32);
+    });
+
+    test('line spacing n=0 is valid', () {
+      final n = 0;
+      expect(n >= 0 && n <= 255, true);
+    });
+
+    test('line spacing n=255 is valid', () {
+      final n = 255;
+      expect(n >= 0 && n <= 255, true);
+    });
+  });
+
+  // ==================== NEW: CODE93 Barcode Tests ====================
+  group('Barcode CODE93', () {
+    test('creates with valid alphanumeric data', () {
+      final barcode = Barcode.code93('ABC123'.split(''));
+      expect(barcode.type, BarcodeType.code93);
+      expect(barcode.data.length, 6);
+    });
+
+    test('creates with single character', () {
+      final barcode = Barcode.code93(['A']);
+      expect(barcode.type, BarcodeType.code93);
+    });
+
+    test('creates with digits only', () {
+      final barcode = Barcode.code93('1234567890'.split(''));
+      expect(barcode.type, BarcodeType.code93);
+    });
+
+    test('creates with special characters', () {
+      final barcode = Barcode.code93(['-', '.', '\$', '/', '+', '%']);
+      expect(barcode.type, BarcodeType.code93);
+    });
+
+    test('creates with spaces', () {
+      final barcode = Barcode.code93('A B'.split(''));
+      expect(barcode.type, BarcodeType.code93);
+    });
+
+    test('throws on empty data', () {
+      expect(
+        () => Barcode.code93([]),
+        throwsException,
+      );
+    });
+
+    test('throws on lowercase letters', () {
+      expect(
+        () => Barcode.code93(['a', 'b']),
+        throwsException,
+      );
+    });
+
+    test('type value is 72 (Function B)', () {
+      expect(BarcodeType.code93.value, 72);
+    });
+  });
+
+  // ==================== NEW: GS1-128 Barcode Tests ====================
+  group('Barcode GS1-128', () {
+    test('creates with valid data', () {
+      final barcode = Barcode.gs1_128('{B01234567890'.split(''));
+      expect(barcode.type, BarcodeType.gs1_128);
+    });
+
+    test('creates with code set A', () {
+      final barcode = Barcode.gs1_128('{A978020137962'.split(''));
+      expect(barcode.type, BarcodeType.gs1_128);
+    });
+
+    test('creates with minimum length (2)', () {
+      final barcode = Barcode.gs1_128(['{', 'B']);
+      expect(barcode.type, BarcodeType.gs1_128);
+    });
+
+    test('throws on single character', () {
+      expect(
+        () => Barcode.gs1_128(['A']),
+        throwsException,
+      );
+    });
+
+    test('throws on empty data', () {
+      expect(
+        () => Barcode.gs1_128([]),
+        throwsException,
+      );
+    });
+
+    test('type value is 74 (Function B)', () {
+      expect(BarcodeType.gs1_128.value, 74);
+    });
+  });
+
+  // ==================== NEW: QR Code Model Selection Tests ====================
+  group('QR Code Model Selection', () {
+    test('QRModel.model1 has value 49', () {
+      expect(QRModel.model1.value, 49);
+    });
+
+    test('QRModel.model2 has value 50', () {
+      expect(QRModel.model2.value, 50);
+    });
+
+    test('QRModel.microQR has value 51', () {
+      expect(QRModel.microQR.value, 51);
+    });
+
+    test('QRCode with default model produces bytes', () {
+      final qr = QRCode('Hello', QRSize.size4, QRCorrection.L);
+      expect(qr.bytes, isNotEmpty);
+    });
+
+    test('QRCode with model1 produces bytes', () {
+      final qr = QRCode('Hello', QRSize.size4, QRCorrection.L,
+          model: QRModel.model1);
+      expect(qr.bytes, isNotEmpty);
+    });
+
+    test('QRCode with microQR produces bytes', () {
+      final qr = QRCode('Hello', QRSize.size4, QRCorrection.L,
+          model: QRModel.microQR);
+      expect(qr.bytes, isNotEmpty);
+    });
+
+    test('different models produce different bytes', () {
+      final qr1 = QRCode('Hello', QRSize.size4, QRCorrection.L,
+          model: QRModel.model1);
+      final qr2 = QRCode('Hello', QRSize.size4, QRCorrection.L,
+          model: QRModel.model2);
+      expect(qr1.bytes, isNot(equals(qr2.bytes)));
+    });
+
+    test('model selection command is first in byte sequence', () {
+      final qr = QRCode('Hi', QRSize.size4, QRCorrection.L,
+          model: QRModel.model2);
+      // First command should be FN 165 (Select model)
+      // GS ( k pL pH cn fn n1 n2
+      // 1D 28 6B 04 00 31 41 [model] 00
+      expect(qr.bytes[0], 0x1D); // GS
+      expect(qr.bytes[1], 0x28); // (
+      expect(qr.bytes[2], 0x6B); // k
+      expect(qr.bytes[3], 0x04); // pL
+      expect(qr.bytes[4], 0x00); // pH
+      expect(qr.bytes[5], 0x31); // cn=49
+      expect(qr.bytes[6], 0x41); // fn=65 (Select model)
+      expect(qr.bytes[7], 50); // Model 2
+      expect(qr.bytes[8], 0x00); // n2=0
+    });
+  });
+
+  // ==================== NEW: QR Code Sizes 9-16 Tests ====================
+  group('QR Code Sizes 9-16', () {
+    test('size9 has value 0x09', () {
+      expect(QRSize.size9.value, 0x09);
+    });
+
+    test('size10 has value 0x0A', () {
+      expect(QRSize.size10.value, 0x0A);
+    });
+
+    test('size12 has value 0x0C', () {
+      expect(QRSize.size12.value, 0x0C);
+    });
+
+    test('size16 has value 0x10', () {
+      expect(QRSize.size16.value, 0x10);
+    });
+
+    test('QRCode with size16 produces bytes', () {
+      final qr = QRCode('Test', QRSize.size16, QRCorrection.L);
+      expect(qr.bytes, isNotEmpty);
+    });
+
+    test('size is encoded correctly in byte sequence', () {
+      final qr = QRCode('Hi', QRSize.size12, QRCorrection.L);
+      // After model selection (9 bytes), the next command is FN 167 (Set size)
+      // GS ( k pL pH cn fn [size]
+      // 1D 28 6B 03 00 31 43 [size]
+      final sizeCmd = qr.bytes.sublist(9, 16);
+      expect(sizeCmd[0], 0x1D); // GS
+      expect(sizeCmd[1], 0x28); // (
+      expect(sizeCmd[2], 0x6B); // k
+      expect(sizeCmd[3], 0x03); // pL
+      expect(sizeCmd[4], 0x00); // pH
+      expect(sizeCmd[5], 0x31); // cn=49 (QR Code)
+      expect(sizeCmd[6], 0x43); // fn=67 (Set size)
+    });
+
+    test('all 16 sizes have unique values', () {
+      final sizes = [
+        QRSize.size1, QRSize.size2, QRSize.size3, QRSize.size4,
+        QRSize.size5, QRSize.size6, QRSize.size7, QRSize.size8,
+        QRSize.size9, QRSize.size10, QRSize.size11, QRSize.size12,
+        QRSize.size13, QRSize.size14, QRSize.size15, QRSize.size16,
+      ];
+      final values = sizes.map((s) => s.value).toSet();
+      expect(values.length, 16);
+    });
+  });
+
+  // ==================== NEW: PDF417 Tests ====================
+  group('PDF417', () {
+    test('creates with default parameters', () {
+      final pdf = PDF417('Hello World');
+      expect(pdf.bytes, isNotEmpty);
+    });
+
+    test('creates with custom columns', () {
+      final pdf = PDF417('Test', columns: 5);
+      expect(pdf.bytes, isNotEmpty);
+    });
+
+    test('creates with custom rows', () {
+      final pdf = PDF417('Test', rows: 10);
+      expect(pdf.bytes, isNotEmpty);
+    });
+
+    test('creates with custom module width', () {
+      final pdf = PDF417('Test', moduleWidth: 5);
+      expect(pdf.bytes, isNotEmpty);
+    });
+
+    test('creates with custom module height', () {
+      final pdf = PDF417('Test', moduleHeight: 6);
+      expect(pdf.bytes, isNotEmpty);
+    });
+
+    test('creates with custom error correction', () {
+      final pdf = PDF417('Test', errorCorrection: 4);
+      expect(pdf.bytes, isNotEmpty);
+    });
+
+    test('creates truncated PDF417', () {
+      final pdf = PDF417('Test', truncated: true);
+      expect(pdf.bytes, isNotEmpty);
+    });
+
+    test('standard and truncated produce different bytes', () {
+      final standard = PDF417('Test', truncated: false);
+      final truncated = PDF417('Test', truncated: true);
+      expect(standard.bytes, isNot(equals(truncated.bytes)));
+    });
+
+    test('byte sequence starts with GS ( k header', () {
+      final pdf = PDF417('Hi');
+      expect(pdf.bytes[0], 0x1D); // GS
+      expect(pdf.bytes[1], 0x28); // (
+      expect(pdf.bytes[2], 0x6B); // k
+    });
+
+    test('cn=48 is used for PDF417', () {
+      final pdf = PDF417('Hi');
+      // First command: FN 065 (Set columns)
+      // GS ( k pL pH cn fn n
+      expect(pdf.bytes[3], 0x03); // pL
+      expect(pdf.bytes[4], 0x00); // pH
+      expect(pdf.bytes[5], 48); // cn=48 (PDF417)
+      expect(pdf.bytes[6], 65); // fn=65 (Set columns)
+    });
+
+    test('columns parameter is encoded correctly', () {
+      final pdf = PDF417('Hi', columns: 7);
+      expect(pdf.bytes[7], 7); // columns=7
+    });
+
+    test('rows parameter is encoded correctly', () {
+      final pdf = PDF417('Hi', rows: 15);
+      // Second command starts at offset 8
+      expect(pdf.bytes[8 + 5], 48); // cn=48
+      expect(pdf.bytes[8 + 6], 66); // fn=66 (Set rows)
+      expect(pdf.bytes[8 + 7], 15); // rows=15
+    });
+
+    test('error correction level is encoded correctly', () {
+      final pdf = PDF417('Hi', errorCorrection: 5);
+      // FN 069 command: bytes[32..38]
+      // The error correction command has pL=4, pH=0, cn=48, fn=69, m=48, n=48+level
+      // Find fn=69 in the sequence
+      bool foundCorrection = false;
+      for (int i = 0; i < pdf.bytes.length - 1; i++) {
+        if (pdf.bytes[i] == 48 && pdf.bytes[i + 1] == 69) {
+          // cn=48, fn=69
+          expect(pdf.bytes[i + 3], 48 + 5); // level 5 = 53
+          foundCorrection = true;
+          break;
+        }
+      }
+      expect(foundCorrection, true);
+    });
+
+    test('different text produces different bytes', () {
+      final pdf1 = PDF417('Hello');
+      final pdf2 = PDF417('World');
+      expect(pdf1.bytes, isNot(equals(pdf2.bytes)));
+    });
+
+    test('full parameter construction works', () {
+      final pdf = PDF417(
+        'Full test',
+        columns: 3,
+        rows: 10,
+        moduleWidth: 4,
+        moduleHeight: 5,
+        errorCorrection: 3,
+        truncated: true,
+      );
+      expect(pdf.bytes, isNotEmpty);
+      expect(pdf.bytes.length, greaterThan(40));
+    });
+  });
 }

@@ -25,6 +25,12 @@ class BarcodeType {
 
   /// CODE128
   static const code128 = BarcodeType._internal(73);
+
+  /// CODE93
+  static const code93 = BarcodeType._internal(72);
+
+  /// GS1-128 (EAN-128)
+  static const gs1_128 = BarcodeType._internal(74);
 }
 
 class BarcodeText {
@@ -239,6 +245,42 @@ class Barcode {
     }
 
     _type = BarcodeType.code128;
+    _data = _convertData(barcodeData);
+  }
+
+  /// CODE93
+  ///
+  /// k >= 1
+  /// d: '0'–'9', A–Z, SP, $, %, +, -, ., /
+  Barcode.code93(List<dynamic> barcodeData) {
+    final k = barcodeData.length;
+    if (k < 1) {
+      throw Exception('Barcode: Wrong data range');
+    }
+
+    final regex = RegExp(r'^[0-9A-Z \$\%\+\-\.\/]$');
+    final bool isDataValid =
+        barcodeData.every((dynamic d) => regex.hasMatch(d.toString()));
+    if (!isDataValid) {
+      throw Exception('Barcode: Data is not valid');
+    }
+
+    _type = BarcodeType.code93;
+    _data = _convertData(barcodeData);
+  }
+
+  /// GS1-128 (EAN-128)
+  ///
+  /// k >= 2
+  /// d: Uses CODE128 code sets with FNC1 application identifiers
+  /// barcodeData ex.: "{B01234567890".split("");
+  Barcode.gs1_128(List<dynamic> barcodeData) {
+    final k = barcodeData.length;
+    if (k < 2) {
+      throw Exception('Barcode: Wrong data range');
+    }
+
+    _type = BarcodeType.gs1_128;
     _data = _convertData(barcodeData);
   }
 

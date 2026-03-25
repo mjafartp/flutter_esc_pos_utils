@@ -34,6 +34,10 @@ const cAlignCenter = '${esc}a1'; // Centered
 const cAlignRight = '${esc}a2'; // Right justification
 const cPos = '$esc\$'; // Set absolute print position [nL] [nH]
 
+// Line Spacing
+const cLineSpacing = '${esc}3'; // Set line spacing to n dots [N] (ESC 3)
+const cLineSpacingDefault = '${esc}2'; // Select default line spacing (ESC 2)
+
 // Print
 const cFeedN = '${esc}d'; // Print and feed n lines [N]
 const cReverseFeedN = '${esc}e'; // Print and reverse feed n lines [N]
