@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:typed_data' show Uint8List;
+import 'dart:typed_data' show BytesBuilder, Uint8List;
 
 import 'package:flutter_esc_pos_utils/flutter_esc_pos_utils.dart';
 import 'package:gbk_codec/gbk_codec.dart';
@@ -712,6 +712,108 @@ class Generator {
       bytes += List.from(header2);
     }
     return bytes;
+  }
+
+  /// Print pre-packed 1-bit monochrome raster data using GS v 0 command.
+  ///
+  /// Accepts raw packed bytes directly — no image conversion, no threshold,
+  /// no grayscale. Bytes must be MSB-first, black=1, white=0, with width
+  /// padded to a multiple of 8.
+  ///
+  /// This is the fastest path for pre-rendered monochrome images.
+  List<int> rawRasterImage(
+    Uint8List monoBytes, {
+    required int width,
+    required int height,
+    PosAlign align = PosAlign.center,
+  }) {
+    final bytesBuilder = BytesBuilder(copy: false);
+
+    // Alignment
+    bytesBuilder.add(setStyles(const PosStyles().copyWith(align: align)));
+
+    final int widthBytes = width ~/ 8;
+
+    // GS v 0: 0x1D 0x76 0x30 m xL xH yL yH d1...dk
+    bytesBuilder.add([0x1D, 0x76, 0x30, 0x00]);
+    bytesBuilder.add([widthBytes & 0xFF, (widthBytes >> 8) & 0xFF]);
+    bytesBuilder.add([height & 0xFF, (height >> 8) & 0xFF]);
+    bytesBuilder.add(monoBytes);
+
+    // Reset line spacing
+    bytesBuilder.add([0x1B, 0x32]);
+
+    return bytesBuilder.toBytes();
+  }
+
+  /// Print pre-packed 1-bit monochrome data using ESC * column format.
+  ///
+  /// Accepts raw packed bytes (MSB-first, black=1, white=0, width padded
+  /// to multiple of 8). Internally rotates and re-packs the data for the
+  /// column-format ESC * command required by some older printers.
+  List<int> rawColumnImage(
+    Uint8List monoBytes, {
+    required int width,
+    required int height,
+    PosAlign align = PosAlign.center,
+    bool highDensity = true,
+  }) {
+    final bytesBuilder = BytesBuilder(copy: false);
+
+    // Alignment
+    bytesBuilder.add(setStyles(const PosStyles().copyWith(align: align)));
+
+    final int widthBytes = width ~/ 8;
+    final int lineHeight = highDensity ? 3 : 1;
+    final int dotsPerSlice = lineHeight * 8; // 24 or 8 dots per column slice
+
+    // Pad height to multiple of dotsPerSlice
+    final int paddedHeight = ((height + dotsPerSlice - 1) ~/ dotsPerSlice) * dotsPerSlice;
+
+    // Density byte for ESC * command
+    final int densityByte = (highDensity ? 1 : 0) + (highDensity ? 32 : 0);
+
+    // ESC * header: ESC * m nL nH
+    final List<int> header = List.from(cBitImg.codeUnits);
+    header.add(densityByte);
+    header.addAll(_intLowHigh(width, 2));
+
+    // Adjust line spacing to 0
+    bytesBuilder.add([0x1B, 0x33, 0x00]);
+
+    // Process in horizontal slices of dotsPerSlice rows
+    for (int sliceY = 0; sliceY < paddedHeight; sliceY += dotsPerSlice) {
+      final List<int> sliceBytes = [];
+
+      // For each column (x pixel)
+      for (int x = 0; x < width; x++) {
+        // Pack dotsPerSlice vertical pixels into bytes (dotsPerSlice/8 bytes per column)
+        for (int byteIdx = 0; byteIdx < lineHeight; byteIdx++) {
+          int byte = 0;
+          for (int bit = 0; bit < 8; bit++) {
+            final int y = sliceY + byteIdx * 8 + bit;
+            if (y < height) {
+              // Read the bit from monoBytes
+              final int srcByteOffset = y * widthBytes + (x ~/ 8);
+              final int srcBitPos = 7 - (x % 8);
+              if ((monoBytes[srcByteOffset] >> srcBitPos) & 1 == 1) {
+                byte |= (0x80 >> bit);
+              }
+            }
+          }
+          sliceBytes.add(byte);
+        }
+      }
+
+      bytesBuilder.add(header);
+      bytesBuilder.add(sliceBytes);
+      bytesBuilder.add('\n'.codeUnits);
+    }
+
+    // Reset line spacing: ESC 2
+    bytesBuilder.add([0x1B, 0x32]);
+
+    return bytesBuilder.toBytes();
   }
 
   /// Print a barcode
