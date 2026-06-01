@@ -79,12 +79,21 @@ class QRCode {
     // FN 169. QR Code: Select the error correction level
     bytes += cQrHeader.codeUnits + [0x03, 0x00, 0x31, 0x45] + [level.value];
 
-    // FN 180. QR Code: Store the data in the symbol storage area
-    List<int> textBytes = latin1.encode(text);
-    int textLength = textBytes.length + 3;
+    // FN 180. QR Code: Store the data in the symbol storage area.
+    // Use UTF-8 so non-Latin-1 characters (Arabic, CJK, emoji, etc.) don't
+    // throw and silently drop the QR command for large payloads. ESC/POS
+    // mode m=0x30 takes raw bytes; standard QR readers decode UTF-8.
+    final List<int> textBytes = utf8.encode(text);
+    final int textLength = textBytes.length + 3;
+    if (textLength > 0xFFFF) {
+      throw ArgumentError(
+        'QR data is ${textBytes.length} bytes; exceeds ESC/POS GS ( k '
+        'limit of 65532 bytes.',
+      );
+    }
 
     bytes += cQrHeader.codeUnits +
-        [textLength & 0xFF, textLength >> 8, 0x31, 0x50, 0x30];
+        [textLength & 0xFF, (textLength >> 8) & 0xFF, 0x31, 0x50, 0x30];
     bytes += textBytes;
 
     // FN 181. QR Code: Print the symbol data in the symbol storage area
