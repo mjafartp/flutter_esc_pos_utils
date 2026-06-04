@@ -5,6 +5,7 @@ import 'package:flutter_esc_pos_utils/flutter_esc_pos_utils.dart';
 import 'package:gbk_codec/gbk_codec.dart';
 import 'package:hex/hex.dart';
 import 'package:image/image.dart';
+import 'package:qr/qr.dart' as qr_lib;
 
 import 'commands.dart';
 import 'pdf417.dart';
@@ -880,6 +881,57 @@ class Generator {
     QRCode qr = QRCode(text, size, cor, model: model);
     bytes += qr.bytes;
     return bytes;
+  }
+
+  /// Print a QR Code as a raster bitmap using `GS v 0`.
+  ///
+  /// Use this on printers that don't reliably support the native QR command
+  /// `GS ( k` (e.g. Sunmi external printers, some BTP/POS models). It also
+  /// avoids printer firmware quirks at symbol-version boundaries (e.g. byte
+  /// mode v2→v3 at 33 chars) by rendering the matrix in Dart.
+  ///
+  /// [moduleSize] dots per QR module (1–16). 4 is a good default.
+  /// [errorCorrectLevel] one of [qr_lib.QrErrorCorrectLevel] L/M/Q/H.
+  /// [typeNumber] explicit QR version 1–40, or null for auto-fit.
+  /// [quietZone] white border modules around symbol; 4 is the spec default.
+  List<int> qrcodeAsImage(
+    String text, {
+    PosAlign align = PosAlign.center,
+    int moduleSize = 4,
+    int errorCorrectLevel = qr_lib.QrErrorCorrectLevel.L,
+    int? typeNumber,
+    int quietZone = 4,
+  }) {
+    final qr_lib.QrCode code = typeNumber == null
+        ? qr_lib.QrCode.fromData(
+            data: text,
+            errorCorrectLevel: errorCorrectLevel,
+          )
+        : (qr_lib.QrCode(typeNumber, errorCorrectLevel)..addData(text));
+    final qr_lib.QrImage qrImage = qr_lib.QrImage(code);
+
+    final int modules = qrImage.moduleCount;
+    final int sidePx = (modules + quietZone * 2) * moduleSize;
+    final Image img = Image(width: sidePx, height: sidePx);
+    fill(img, color: ColorRgb8(255, 255, 255));
+    final ColorRgb8 black = ColorRgb8(0, 0, 0);
+    for (int y = 0; y < modules; y++) {
+      for (int x = 0; x < modules; x++) {
+        if (qrImage.isDark(y, x)) {
+          final int px = (x + quietZone) * moduleSize;
+          final int py = (y + quietZone) * moduleSize;
+          fillRect(
+            img,
+            x1: px,
+            y1: py,
+            x2: px + moduleSize - 1,
+            y2: py + moduleSize - 1,
+            color: black,
+          );
+        }
+      }
+    }
+    return imageRaster(img, align: align);
   }
 
   /// Print a PDF417 barcode
